@@ -1,2 +1,7 @@
 [workspace]
 resolver = "3"
+members = [
+    "crates/northrend",
+    "crates/northrend-backend",
+    "crates/northrend-math",
+]
