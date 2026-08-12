@@ -3,5 +3,13 @@ resolver = "3"
 members = [
     "crates/northrend",
     "crates/northrend-backend",
-    "crates/northrend-math",
+    "crates/northrend-winit",
 ]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+authors = ["Carnivohra <carnivohra@gmail.com>"]
+
+[workspace.dependencies]
+thiserror = "2.0.20"

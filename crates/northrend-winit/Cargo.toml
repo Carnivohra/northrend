@@ -1,7 +1,8 @@
 [package]
-name = "northrend"
+name = "northrend-winit"
 version.workspace = true
 edition.workspace = true
 
 [dependencies]
 northrend-backend = { path = "../northrend-backend" }
+thiserror = { workspace = true }

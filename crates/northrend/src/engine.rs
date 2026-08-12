@@ -1,19 +1,23 @@
-use northrend_backend::Backend;
+use northrend_backend::BackendApplication;
 
-pub struct Engine<B: Backend> {
-    _backend: B,
+pub struct Engine;
+
+impl Engine {
+    pub fn new() -> Self {
+        Self
+    }
 }
 
-impl<B: Backend> Engine<B> {
-    pub fn new(_backend: B) -> Self {
-        Self { _backend }
+impl BackendApplication for Engine {
+    fn resumed(&mut self) {
+        todo!()
     }
 
-    pub fn run(&self) {
-        //let window = self.backend.create_window();
+    fn suspended(&mut self) {
+        todo!()
+    }
 
-        loop {
-            //let events = self.backend.poll_events();
-        }
+    fn event(&mut self) {
+        todo!()
     }
 }
