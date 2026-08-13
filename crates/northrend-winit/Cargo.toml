@@ -6,3 +6,4 @@ edition.workspace = true
 [dependencies]
 northrend-backend = { path = "../northrend-backend" }
 thiserror = { workspace = true }
+winit = { workspace = true }
