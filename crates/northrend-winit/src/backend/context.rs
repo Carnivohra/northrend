@@ -7,11 +7,11 @@ use winit::{
 
 pub(super) struct WinitBackendContext<'a> {
     event_loop: &'a ActiveEventLoop,
-    windows: &'a mut Vec<Window>,
+    windows: &'a mut Vec<Option<Window>>,
 }
 
 impl<'a> WinitBackendContext<'a> {
-    pub fn new(event_loop: &'a ActiveEventLoop, windows: &'a mut Vec<Window>) -> Self {
+    pub fn new(event_loop: &'a ActiveEventLoop, windows: &'a mut Vec<Option<Window>>) -> Self {
         Self {
             event_loop,
             windows,
@@ -37,8 +37,26 @@ impl BackendContext for WinitBackendContext<'_> {
             .and_then(|index| index.checked_add(1))
             .map(WindowId::new)
             .ok_or(BackendError::WindowCreationFailed)?;
-        self.windows.push(window);
+        self.windows.push(Some(window));
 
         Ok(window_id)
+    }
+
+    fn destroy_window(&mut self, window_id: WindowId) {
+        let Some(index) = window_id
+            .value()
+            .checked_sub(1)
+            .and_then(|index| usize::try_from(index).ok())
+        else {
+            return;
+        };
+
+        if let Some(window) = self.windows.get_mut(index) {
+            *window = None;
+        }
+    }
+
+    fn exit(&mut self) {
+        self.event_loop.exit();
     }
 }

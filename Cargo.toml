@@ -3,6 +3,7 @@ resolver = "3"
 members = [
     "crates/northrend",
     "crates/northrend-backend",
+    "crates/northrend-render",
     "crates/northrend-winit",
 ]
 

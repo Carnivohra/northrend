@@ -1,4 +1,7 @@
-use northrend_backend::{BackendApplication, BackendContext, WindowDescriptor, WindowId};
+use northrend_backend::{
+    BackendApplication, BackendContext, WindowDescriptor, WindowId,
+    window::{WindowEvent, event::WindowEventKind},
+};
 
 pub struct Engine {
     main_window: Option<WindowId>,
@@ -19,15 +22,17 @@ impl BackendApplication for Engine {
         self.main_window = Some(window);
     }
 
-    fn resumed<C: BackendContext>(&mut self, _context: &mut C) {
-        todo!()
-    }
+    fn resumed<C: BackendContext>(&mut self, _context: &mut C) {}
 
-    fn suspended<C: BackendContext>(&mut self, _context: &mut C) {
-        todo!()
-    }
+    fn suspended<C: BackendContext>(&mut self, _context: &mut C) {}
 
-    fn event(&mut self) {
-        todo!()
+    fn window_event<C: BackendContext>(&mut self, context: &mut C, event: WindowEvent) {
+        if matches!(event.kind, WindowEventKind::CloseRequested) {
+            context.destroy_window(event.window_id);
+
+            if self.main_window == Some(event.window_id) {
+                context.exit();
+            }
+        }
     }
 }

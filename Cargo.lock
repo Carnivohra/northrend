@@ -580,6 +580,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "northrend-render"
+version = "0.0.1"
+
+[[package]]
 name = "northrend-winit"
 version = "0.0.1"
 dependencies = [
