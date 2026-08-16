@@ -1,9 +1,11 @@
 [package]
-name = "northrend"
+name = "northrend-wgpu"
 version.workspace = true
 edition.workspace = true
+authors.workspace = true
 
 [dependencies]
 northrend-backend = { path = "../northrend-backend" }
 northrend-render = { path = "../northrend-render" }
-pollster = { workspace = true }
+thiserror = { workspace = true }
+wgpu = { workspace = true }

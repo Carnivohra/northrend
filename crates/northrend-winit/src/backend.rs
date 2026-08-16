@@ -6,10 +6,11 @@ use winit::event_loop::EventLoop;
 
 use crate::{WinitError, backend::application::WinitApplication};
 
+#[derive(Default)]
 pub struct WinitBackend;
 
 impl WinitBackend {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self
     }
 }

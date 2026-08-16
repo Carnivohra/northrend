@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use northrend_backend::{
     BackendApplication, WindowId,
     window::{WindowEvent, event::WindowEventKind},
@@ -10,14 +12,14 @@ use winit::{
 
 use super::context::WinitBackendContext;
 
-pub(crate) struct WinitApplication<A> {
+pub(super) struct WinitApplication<A> {
     application: A,
-    windows: Vec<Option<Window>>,
+    windows: Vec<Option<Arc<Window>>>,
     started: bool,
 }
 
 impl<A> WinitApplication<A> {
-    pub fn new(application: A) -> Self {
+    pub(super) fn new(application: A) -> Self {
         Self {
             application,
             windows: Vec::new(),
@@ -59,12 +61,9 @@ impl<A: BackendApplication> ApplicationHandler for WinitApplication<A> {
             _ => return,
         };
 
-        let Some(window_id) = self
-            .windows
-            .iter()
+        let Some(window_id) = self.windows.iter()
             .position(|window| {
-                window
-                    .as_ref()
+                window.as_ref()
                     .is_some_and(|window| window.id() == window_id)
             })
             .and_then(|index| u64::try_from(index).ok())

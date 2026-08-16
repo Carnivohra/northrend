@@ -4,6 +4,7 @@ members = [
     "crates/northrend",
     "crates/northrend-backend",
     "crates/northrend-render",
+    "crates/northrend-wgpu",
     "crates/northrend-winit",
 ]
 
@@ -13,5 +14,8 @@ edition = "2024"
 authors = ["Carnivohra <carnivohra@gmail.com>"]
 
 [workspace.dependencies]
+raw-window-handle = "0.6.2"
+pollster = "1.0.1"
 thiserror = "2.0.20"
 winit = "0.30.13"
+wgpu = "30.0.0"

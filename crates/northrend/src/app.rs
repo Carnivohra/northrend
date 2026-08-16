@@ -1,23 +1,25 @@
 mod builder;
 
-pub use builder::AppBuilder;
+use builder::AppBuilder;
+
 use northrend_backend::Backend;
+use northrend_render::Renderer;
 
-use crate::Engine;
+use crate::engine::Engine;
 
-pub struct App<B = ()> {
+pub struct App<B = (), R = ()> {
     backend: B,
-    engine: Engine,
+    renderer: R,
 }
 
-impl App<()> {
-    pub fn builder() -> AppBuilder<()> {
+impl App<(), ()> {
+    pub fn builder() -> AppBuilder<(), ()> {
         AppBuilder::new()
     }
 }
 
-impl<B: Backend> App<B> {
+impl<B: Backend, R: Renderer + 'static> App<B, R> {
     pub fn run(self) -> Result<(), B::Error> {
-        self.backend.run(self.engine)
+        self.backend.run(Engine::new(self.renderer))
     }
 }
