@@ -1,72 +1,88 @@
 use northrend_backend::{
-    BackendApplication, BackendContext, WindowDescriptor, WindowId,
+    BackendApplication, BackendContext, WindowDescriptor,
     window::{WindowEvent, event::WindowEventKind},
 };
-use northrend_render::Renderer;
+use northrend_game::Game;
+use northrend_render::{Color, RenderFrame, Renderer};
 
-pub(crate) struct Engine<R: Renderer> {
-    main_window: Option<WindowId>,
-    main_surface: Option<R::Surface>,
+use crate::window::WindowTarget;
+
+pub(crate) struct Engine<R: Renderer, G: Game> {
+    main_window: Option<WindowTarget<R::Surface>>,
     renderer: R,
+    game: G,
 }
 
-impl<R: Renderer> Engine<R> {
-    pub(crate) fn new(renderer: R) -> Self {
+impl<R: Renderer, G: Game> Engine<R, G> {
+    pub(crate) fn new(renderer: R, game: G) -> Self {
         Self {
             main_window: None,
-            main_surface: None,
             renderer,
+            game,
         }
+    }
+
+    fn tick<C: BackendContext>(&mut self, context: &mut C) {
+        let Some(target) = self.main_window.as_mut() else {
+            return;
+        };
+
+        let frame = RenderFrame::<R::Mesh, R::Material>::new(Color::BLACK, &[]);
+        self.renderer.render(&mut target.surface, &frame)
+            .expect("failed to render frame");
+
+        context.request_redraw(&target.window);
     }
 }
 
-impl<R: Renderer> BackendApplication for Engine<R> {
+impl<R: Renderer, G: Game> BackendApplication for Engine<R, G> {
     fn started<C: BackendContext>(&mut self, context: &mut C) {
-        let descriptor = WindowDescriptor::default();
+        let descriptor = WindowDescriptor {
+            title: self.game.name().to_owned(),
+            ..Default::default()
+        };
+
         let width = descriptor.width;
         let height = descriptor.height;
-        let window_id = context
+        let window = context
             .create_window(descriptor)
             .expect("failed to create window");
 
-        let window = context
-            .window_handle(window_id)
-            .expect("failed to get window handle");
-
-        let surface = pollster::block_on(self.renderer.create_surface(window, width, height))
+        let surface = pollster::block_on(self.renderer.create_surface(window.handle(), width, height))
             .expect("failed to create render surface");
 
-        self.main_window = Some(window_id);
-        self.main_surface = Some(surface);
-        context.request_redraw(window_id);
+        self.main_window = Some(WindowTarget::new(window, surface));
+
+        if let Some(target) = self.main_window.as_ref() {
+            context.request_redraw(&target.window);
+        }
     }
 
     fn window_event<C: BackendContext>(&mut self, context: &mut C, event: WindowEvent) {
-        if self.main_window != Some(event.window_id) {
+        let Some(target) = self.main_window.as_ref() else {
+            return;
+        };
+
+        if target.window.id() != event.window_id {
             return;
         }
 
         match event.kind {
             WindowEventKind::CloseRequested => {
-                self.main_surface = None;
-                self.main_window = None;
-                context.destroy_window(event.window_id);
+                let target = self.main_window.take()
+                    .expect("main window is initialized");
+
+                let WindowTarget { window, surface } = target;
+                drop(surface);
+                context.destroy_window(window);
                 context.exit();
             }
             WindowEventKind::Resized { width, height } => {
-                if let Some(surface) = self.main_surface.as_mut() {
-                    self.renderer.resize(surface, width, height);
+                if let Some(target) = self.main_window.as_mut() {
+                    self.renderer.resize(&mut target.surface, width, height);
                 }
             }
-            WindowEventKind::RedrawRequested => {
-                if let Some(surface) = self.main_surface.as_mut() {
-                    self.renderer
-                        .render(surface)
-                        .expect("failed to render frame");
-
-                    context.request_redraw(event.window_id);
-                }
-            }
+            WindowEventKind::RedrawRequested => self.tick(context),
         }
     }
 }

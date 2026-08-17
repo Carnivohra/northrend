@@ -1,21 +1,23 @@
 use std::sync::Arc;
 
-use northrend_backend::{BackendContext, BackendError, WindowDescriptor, WindowHandle, WindowId};
+use northrend_backend::{
+    BackendContext, BackendError, Window, WindowDescriptor, WindowHandle, WindowId,
+};
 use winit::{
     dpi::PhysicalSize,
     event_loop::ActiveEventLoop,
-    window::{Window, WindowAttributes},
+    window::{Window as WinitWindow, WindowAttributes},
 };
 
 pub(super) struct WinitBackendContext<'a> {
     event_loop: &'a ActiveEventLoop,
-    windows: &'a mut Vec<Option<Arc<Window>>>,
+    windows: &'a mut Vec<Option<Arc<WinitWindow>>>,
 }
 
 impl<'a> WinitBackendContext<'a> {
     pub(super) fn new(
         event_loop: &'a ActiveEventLoop,
-        windows: &'a mut Vec<Option<Arc<Window>>>,
+        windows: &'a mut Vec<Option<Arc<WinitWindow>>>,
     ) -> Self {
         Self {
             event_loop,
@@ -23,7 +25,7 @@ impl<'a> WinitBackendContext<'a> {
         }
     }
 
-    fn window(&self, window_id: WindowId) -> Option<&Arc<Window>> {
+    fn window(&self, window_id: WindowId) -> Option<&Arc<WinitWindow>> {
         let index = Self::window_index(window_id)?;
         self.windows.get(index)?.as_ref()
     }
@@ -36,7 +38,7 @@ impl<'a> WinitBackendContext<'a> {
 }
 
 impl BackendContext for WinitBackendContext<'_> {
-    fn create_window(&mut self, descriptor: WindowDescriptor) -> Result<WindowId, BackendError> {
+    fn create_window(&mut self, descriptor: WindowDescriptor) -> Result<Window, BackendError> {
         let attributes = WindowAttributes::default()
             .with_title(descriptor.title)
             .with_inner_size(PhysicalSize::new(descriptor.width, descriptor.height))
@@ -53,13 +55,15 @@ impl BackendContext for WinitBackendContext<'_> {
             .and_then(|index| index.checked_add(1))
             .map(WindowId::new)
             .ok_or(BackendError::WindowCreationFailed)?;
-        self.windows.push(Some(window));
 
-        Ok(window_id)
+        let window_handle = WindowHandle::new(window.clone());
+
+        self.windows.push(Some(window));
+        Ok(Window::new(window_id, window_handle))
     }
 
-    fn destroy_window(&mut self, window_id: WindowId) {
-        let Some(index) = Self::window_index(window_id)
+    fn destroy_window(&mut self, window: Window) {
+        let Some(index) = Self::window_index(window.id())
         else {
             return;
         };
@@ -69,13 +73,8 @@ impl BackendContext for WinitBackendContext<'_> {
         }
     }
 
-    fn window_handle(&self, window_id: WindowId) -> Option<WindowHandle> {
-        let window = self.window(window_id)?.clone();
-        Some(WindowHandle::new(window))
-    }
-
-    fn request_redraw(&self, window_id: WindowId) {
-        if let Some(window) = self.window(window_id) {
+    fn request_redraw(&self, window: &Window) {
+        if let Some(window) = self.window(window.id()) {
             window.request_redraw();
         }
     }

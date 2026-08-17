@@ -1,9 +1,8 @@
-use crate::{BackendError, WindowDescriptor, WindowHandle, WindowId};
+use crate::{BackendError, Window, WindowDescriptor};
 
 pub trait BackendContext {
-    fn create_window(&mut self, descriptor: WindowDescriptor) -> Result<WindowId, BackendError>;
-    fn destroy_window(&mut self, window_id: WindowId);
-    fn window_handle(&self, window_id: WindowId) -> Option<WindowHandle>;
-    fn request_redraw(&self, window_id: WindowId);
+    fn create_window(&mut self, descriptor: WindowDescriptor) -> Result<Window, BackendError>;
+    fn destroy_window(&mut self, window: Window);
+    fn request_redraw(&self, window: &Window);
     fn exit(&mut self);
 }

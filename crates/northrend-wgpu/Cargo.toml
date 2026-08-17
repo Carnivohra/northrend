@@ -5,6 +5,7 @@ edition.workspace = true
 authors.workspace = true
 
 [dependencies]
+bytemuck = { workspace = true }
 northrend-backend = { path = "../northrend-backend" }
 northrend-render = { path = "../northrend-render" }
 thiserror = { workspace = true }

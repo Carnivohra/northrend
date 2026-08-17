@@ -20,4 +20,19 @@ pub enum WgpuError {
 
     #[error("surface validation failed")]
     SurfaceValidationFailed,
+
+    #[error("renderer is not initialized")]
+    RendererNotInitialized,
+
+    #[error("shader handle is invalid")]
+    InvalidShader,
+
+    #[error("material handle is invalid")]
+    InvalidMaterial,
+
+    #[error("frame contains too many render views")]
+    TooManyViews,
+
+    #[error("mesh contains invalid vertex or index data")]
+    InvalidMesh,
 }

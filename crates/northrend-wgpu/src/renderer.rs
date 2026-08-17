@@ -1,14 +1,23 @@
 mod state;
 
+use std::collections::HashMap;
+
 use state::WgpuRendererState;
 
 use northrend_backend::WindowHandle;
-use northrend_render::Renderer;
+use northrend_render::{
+    MaterialDescriptor, MeshData, RenderFrame, Renderer, ShaderDescriptor,
+};
 use wgpu::{
-    Color, CommandEncoderDescriptor, CurrentSurfaceTexture, DeviceDescriptor, Instance, InstanceDescriptor, LoadOp, Operations, RenderPassColorAttachment, RenderPassDescriptor, RequestAdapterOptions, StoreOp, TextureViewDescriptor,
+    CommandEncoderDescriptor, CurrentSurfaceTexture, DeviceDescriptor, Instance, InstanceDescriptor, LoadOp, Operations, RenderPassColorAttachment, RenderPassDepthStencilAttachment, RenderPassDescriptor, RequestAdapterOptions, StoreOp, TextureViewDescriptor,
 };
 
-use crate::{WgpuError, WgpuSurface};
+use crate::{
+    WgpuError, WgpuMaterial, WgpuMesh, WgpuShader, WgpuSurface,
+    camera::WgpuCamera,
+    material::WgpuMaterialResource,
+    shader::WgpuShaderResource,
+};
 
 pub struct WgpuRenderer {
     instance: Instance,
@@ -16,6 +25,7 @@ pub struct WgpuRenderer {
 }
 
 impl WgpuRenderer {
+    #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         Self {
             instance: Instance::new(InstanceDescriptor::new_without_display_handle()),
@@ -26,6 +36,9 @@ impl WgpuRenderer {
 
 impl Renderer for WgpuRenderer {
     type Error = WgpuError;
+    type Material = WgpuMaterial;
+    type Mesh = WgpuMesh;
+    type Shader = WgpuShader;
     type Surface = WgpuSurface;
 
     async fn create_surface(
@@ -51,10 +64,16 @@ impl Renderer for WgpuRenderer {
                 })
                 .await?;
 
+            let camera = WgpuCamera::new(&device);
+
             self.state = Some(WgpuRendererState {
                 adapter,
                 device,
                 queue,
+                camera,
+                shaders: Vec::new(),
+                materials: Vec::new(),
+                pipelines: HashMap::new(),
             });
         }
 
@@ -69,17 +88,41 @@ impl Renderer for WgpuRenderer {
             .get_default_config(&state.adapter, width.max(1), height.max(1))
             .ok_or(WgpuError::UnsupportedSurface)?;
 
-        let surface = WgpuSurface {
-            surface,
-            configuration,
-            active,
-        };
-
-        if surface.active {
-            surface.configure(&state.device);
-        }
+        let surface = WgpuSurface::new(surface, configuration, active, &state.device);
 
         Ok(surface)
+    }
+
+    fn create_shader(&mut self, shader: ShaderDescriptor<'_>) -> Result<Self::Shader, Self::Error> {
+        let state = self.state.as_mut().ok_or(WgpuError::RendererNotInitialized)?;
+        let handle = WgpuShader::new(state.shaders.len());
+        let shader = WgpuShaderResource::new(&state.device, shader);
+
+        state.shaders.push(shader);
+        Ok(handle)
+    }
+
+    fn create_material(
+        &mut self,
+        material: MaterialDescriptor<Self::Shader>,
+    ) -> Result<Self::Material, Self::Error> {
+        let state = self.state.as_mut().ok_or(WgpuError::RendererNotInitialized)?;
+
+        if state.shaders.get(material.shader.index()).is_none() {
+            return Err(WgpuError::InvalidShader);
+        }
+
+        let handle = WgpuMaterial::new(state.materials.len());
+        state.materials.push(WgpuMaterialResource {
+            shader: material.shader,
+        });
+
+        Ok(handle)
+    }
+
+    fn create_mesh(&mut self, mesh: MeshData<'_>) -> Result<Self::Mesh, Self::Error> {
+        let state = self.state.as_ref().ok_or(WgpuError::RendererNotInitialized)?;
+        WgpuMesh::new(&state.device, mesh)
     }
 
     fn resize(&mut self, surface: &mut Self::Surface, width: u32, height: u32) {
@@ -96,15 +139,34 @@ impl Renderer for WgpuRenderer {
         surface.configure(&state.device);
     }
 
-    fn render(&mut self, surface: &mut Self::Surface) -> Result<(), Self::Error> {
+    fn render(
+        &mut self,
+        surface: &mut Self::Surface,
+        frame: &RenderFrame<'_, Self::Mesh, Self::Material>,
+    ) -> Result<(), Self::Error> {
         if !surface.active {
             return Ok(());
         }
 
-        let state = self.state.as_ref().expect("renderer state is initialized");
-        let (frame, reconfigure) = match surface.surface.get_current_texture() {
-            CurrentSurfaceTexture::Success(frame) => (frame, false),
-            CurrentSurfaceTexture::Suboptimal(frame) => (frame, true),
+        let state = self.state.as_mut().ok_or(WgpuError::RendererNotInitialized)?;
+        let color_format = surface.configuration.format;
+
+        for view in frame.views {
+            for draw in view.draws {
+                state.ensure_pipeline(draw.material, color_format)?;
+            }
+        }
+
+        state.camera.prepare(
+            &state.device,
+            &state.queue,
+            frame.views.iter()
+                .map(|view| &view.camera.view_projection.columns),
+        )?;
+
+        let (surface_texture, reconfigure) = match surface.surface.get_current_texture() {
+            CurrentSurfaceTexture::Success(surface_texture) => (surface_texture, false),
+            CurrentSurfaceTexture::Suboptimal(surface_texture) => (surface_texture, true),
             CurrentSurfaceTexture::Timeout | CurrentSurfaceTexture::Occluded => return Ok(()),
             CurrentSurfaceTexture::Outdated => {
                 surface.configure(&state.device);
@@ -116,39 +178,69 @@ impl Renderer for WgpuRenderer {
             }
         };
 
-        let view = frame.texture.create_view(&TextureViewDescriptor::default());
+        let surface_view = surface_texture.texture.create_view(&TextureViewDescriptor::default());
+
         let mut encoder = state.device
             .create_command_encoder(&CommandEncoderDescriptor {
                 label: Some("northrend-wgpu encoder"),
             });
 
         {
-            encoder.begin_render_pass(&RenderPassDescriptor {
-                label: Some("northrend-wgpu clear pass"),
+            let mut render_pass = encoder.begin_render_pass(&RenderPassDescriptor {
+                label: Some("northrend-wgpu render pass"),
                 color_attachments: &[Some(RenderPassColorAttachment {
-                    view: &view,
+                    view: &surface_view,
                     depth_slice: None,
                     resolve_target: None,
                     ops: Operations {
-                        load: LoadOp::Clear(Color {
-                            r: 0.0,
-                            g: 0.0,
-                            b: 0.0,
-                            a: 1.0,
+                        load: LoadOp::Clear(wgpu::Color {
+                            r: f64::from(frame.clear_color.red),
+                            g: f64::from(frame.clear_color.green),
+                            b: f64::from(frame.clear_color.blue),
+                            a: f64::from(frame.clear_color.alpha),
                         }),
                         store: StoreOp::Store,
                     },
                 })],
 
-                depth_stencil_attachment: None,
+                depth_stencil_attachment: Some(RenderPassDepthStencilAttachment {
+                    view: &surface.depth.view,
+                    depth_ops: Some(Operations {
+                        load: LoadOp::Clear(0.0),
+                        store: StoreOp::Discard,
+                    }),
+                    stencil_ops: None,
+                }),
                 timestamp_writes: None,
                 occlusion_query_set: None,
                 multiview_mask: None,
             });
+
+            for (view_index, view) in frame.views.iter().enumerate() {
+                let camera_offset = state.camera.offset(view_index)?;
+                let mut bound_shader = None;
+
+                for draw in view.draws {
+                    let shader = state.material_shader(draw.material)?;
+                    let pipeline = state.pipelines.get(&(shader, color_format))
+                        .ok_or(WgpuError::InvalidMaterial)?;
+
+                    if bound_shader != Some(shader) {
+                        pipeline.bind(
+                            &mut render_pass,
+                            &state.camera.bind_group,
+                            camera_offset,
+                        );
+                        bound_shader = Some(shader);
+                    }
+
+                    pipeline.draw(&mut render_pass, draw.mesh);
+                }
+            }
         }
 
         state.queue.submit([encoder.finish()]);
-        state.queue.present(frame);
+        state.queue.present(surface_texture);
 
         if reconfigure {
             surface.configure(&state.device);

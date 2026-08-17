@@ -3,6 +3,8 @@ resolver = "3"
 members = [
     "crates/northrend",
     "crates/northrend-backend",
+    "crates/northrend-game",
+    "crates/northrend-math",
     "crates/northrend-render",
     "crates/northrend-wgpu",
     "crates/northrend-winit",
@@ -14,6 +16,7 @@ edition = "2024"
 authors = ["Carnivohra <carnivohra@gmail.com>"]
 
 [workspace.dependencies]
+bytemuck = "1.25.2"
 raw-window-handle = "0.6.2"
 pollster = "1.0.1"
 thiserror = "2.0.20"

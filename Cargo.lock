@@ -828,6 +828,7 @@ name = "northrend"
 version = "0.0.1"
 dependencies = [
  "northrend-backend",
+ "northrend-game",
  "northrend-render",
  "pollster",
 ]
@@ -841,16 +842,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "northrend-game"
+version = "0.0.1"
+
+[[package]]
+name = "northrend-math"
+version = "0.0.1"
+
+[[package]]
 name = "northrend-render"
 version = "0.0.1"
 dependencies = [
  "northrend-backend",
+ "northrend-math",
 ]
 
 [[package]]
 name = "northrend-wgpu"
 version = "0.0.1"
 dependencies = [
+ "bytemuck",
  "northrend-backend",
  "northrend-render",
  "thiserror 2.0.20",
