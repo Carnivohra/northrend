@@ -1,10 +1,16 @@
+mod handle;
+
+pub use handle::MaterialHandle;
+
+use crate::ShaderHandle;
+
 #[derive(Debug, Clone, Copy)]
-pub struct MaterialDescriptor<S> {
-    pub shader: S,
+pub struct MaterialDescriptor {
+    pub shader: ShaderHandle,
 }
 
-impl<S> MaterialDescriptor<S> {
-    pub const fn new(shader: S) -> Self {
+impl MaterialDescriptor {
+    pub const fn new(shader: ShaderHandle) -> Self {
         Self { shader }
     }
 }

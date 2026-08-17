@@ -5,7 +5,7 @@ use wgpu::{
     StencilState, TextureFormat, VertexState,
 };
 
-use crate::WgpuMesh;
+use crate::mesh::WgpuMesh;
 
 pub(crate) struct WgpuRenderPipeline {
     pipeline: RenderPipeline,

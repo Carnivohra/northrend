@@ -6,16 +6,18 @@ use state::WgpuRendererState;
 
 use northrend_backend::WindowHandle;
 use northrend_render::{
-    MaterialDescriptor, MeshData, RenderFrame, Renderer, ShaderDescriptor,
+    MaterialDescriptor, MaterialHandle, MeshData, MeshHandle, RenderFrame, Renderer,
+    ShaderDescriptor, ShaderHandle,
 };
 use wgpu::{
     CommandEncoderDescriptor, CurrentSurfaceTexture, DeviceDescriptor, Instance, InstanceDescriptor, LoadOp, Operations, RenderPassColorAttachment, RenderPassDepthStencilAttachment, RenderPassDescriptor, RequestAdapterOptions, StoreOp, TextureViewDescriptor,
 };
 
 use crate::{
-    WgpuError, WgpuMaterial, WgpuMesh, WgpuShader, WgpuSurface,
+    WgpuError, WgpuSurface,
     camera::WgpuCamera,
     material::WgpuMaterialResource,
+    mesh::WgpuMesh,
     shader::WgpuShaderResource,
 };
 
@@ -36,9 +38,6 @@ impl WgpuRenderer {
 
 impl Renderer for WgpuRenderer {
     type Error = WgpuError;
-    type Material = WgpuMaterial;
-    type Mesh = WgpuMesh;
-    type Shader = WgpuShader;
     type Surface = WgpuSurface;
 
     async fn create_surface(
@@ -71,6 +70,7 @@ impl Renderer for WgpuRenderer {
                 device,
                 queue,
                 camera,
+                meshes: Vec::new(),
                 shaders: Vec::new(),
                 materials: Vec::new(),
                 pipelines: HashMap::new(),
@@ -93,9 +93,10 @@ impl Renderer for WgpuRenderer {
         Ok(surface)
     }
 
-    fn create_shader(&mut self, shader: ShaderDescriptor<'_>) -> Result<Self::Shader, Self::Error> {
+    fn create_shader(&mut self, shader: ShaderDescriptor<'_>) -> Result<ShaderHandle, Self::Error> {
         let state = self.state.as_mut().ok_or(WgpuError::RendererNotInitialized)?;
-        let handle = WgpuShader::new(state.shaders.len());
+        let handle = ShaderHandle::from_index(state.shaders.len())
+            .ok_or(WgpuError::ResourceCapacityExceeded)?;
         let shader = WgpuShaderResource::new(&state.device, shader);
 
         state.shaders.push(shader);
@@ -104,15 +105,16 @@ impl Renderer for WgpuRenderer {
 
     fn create_material(
         &mut self,
-        material: MaterialDescriptor<Self::Shader>,
-    ) -> Result<Self::Material, Self::Error> {
+        material: MaterialDescriptor,
+    ) -> Result<MaterialHandle, Self::Error> {
         let state = self.state.as_mut().ok_or(WgpuError::RendererNotInitialized)?;
 
         if state.shaders.get(material.shader.index()).is_none() {
             return Err(WgpuError::InvalidShader);
         }
 
-        let handle = WgpuMaterial::new(state.materials.len());
+        let handle = MaterialHandle::from_index(state.materials.len())
+            .ok_or(WgpuError::ResourceCapacityExceeded)?;
         state.materials.push(WgpuMaterialResource {
             shader: material.shader,
         });
@@ -120,9 +122,14 @@ impl Renderer for WgpuRenderer {
         Ok(handle)
     }
 
-    fn create_mesh(&mut self, mesh: MeshData<'_>) -> Result<Self::Mesh, Self::Error> {
-        let state = self.state.as_ref().ok_or(WgpuError::RendererNotInitialized)?;
-        WgpuMesh::new(&state.device, mesh)
+    fn create_mesh(&mut self, mesh: MeshData<'_>) -> Result<MeshHandle, Self::Error> {
+        let state = self.state.as_mut().ok_or(WgpuError::RendererNotInitialized)?;
+        let handle = MeshHandle::from_index(state.meshes.len())
+            .ok_or(WgpuError::ResourceCapacityExceeded)?;
+        let mesh = WgpuMesh::new(&state.device, mesh)?;
+
+        state.meshes.push(mesh);
+        Ok(handle)
     }
 
     fn resize(&mut self, surface: &mut Self::Surface, width: u32, height: u32) {
@@ -142,7 +149,7 @@ impl Renderer for WgpuRenderer {
     fn render(
         &mut self,
         surface: &mut Self::Surface,
-        frame: &RenderFrame<'_, Self::Mesh, Self::Material>,
+        frame: &RenderFrame<'_>,
     ) -> Result<(), Self::Error> {
         if !surface.active {
             return Ok(());
@@ -224,6 +231,8 @@ impl Renderer for WgpuRenderer {
                     let shader = state.material_shader(draw.material)?;
                     let pipeline = state.pipelines.get(&(shader, color_format))
                         .ok_or(WgpuError::InvalidMaterial)?;
+                    let mesh = state.meshes.get(draw.mesh.index())
+                        .ok_or(WgpuError::InvalidMesh)?;
 
                     if bound_shader != Some(shader) {
                         pipeline.bind(
@@ -234,7 +243,7 @@ impl Renderer for WgpuRenderer {
                         bound_shader = Some(shader);
                     }
 
-                    pipeline.draw(&mut render_pass, draw.mesh);
+                    pipeline.draw(&mut render_pass, mesh);
                 }
             }
         }

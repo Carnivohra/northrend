@@ -7,7 +7,7 @@ use wgpu::{
 
 use crate::WgpuError;
 
-pub struct WgpuMesh {
+pub(crate) struct WgpuMesh {
     pub(crate) vertex_buffer: Buffer,
     pub(crate) index_buffer: Buffer,
     pub(crate) index_count: u32,
@@ -32,11 +32,11 @@ impl WgpuMesh {
             || mesh.indices.is_empty()
             || mesh.indices.iter().any(|index| *index as usize >= mesh.vertices.len())
         {
-            return Err(WgpuError::InvalidMesh);
+            return Err(WgpuError::InvalidMeshData);
         }
 
         let index_count = u32::try_from(mesh.indices.len())
-            .map_err(|_| WgpuError::InvalidMesh)?;
+            .map_err(|_| WgpuError::InvalidMeshData)?;
 
         let vertices: Vec<[f32; 7]> = mesh.vertices.iter()
             .map(|vertex| {

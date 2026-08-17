@@ -27,7 +27,7 @@ impl<R: Renderer, G: Game> Engine<R, G> {
             return;
         };
 
-        let frame = RenderFrame::<R::Mesh, R::Material>::new(Color::BLACK, &[]);
+        let frame = RenderFrame::new(Color::BLACK, &[]);
         self.renderer.render(&mut target.surface, &frame)
             .expect("failed to render frame");
 

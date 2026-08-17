@@ -24,6 +24,9 @@ pub enum WgpuError {
     #[error("renderer is not initialized")]
     RendererNotInitialized,
 
+    #[error("renderer resource capacity was exceeded")]
+    ResourceCapacityExceeded,
+
     #[error("shader handle is invalid")]
     InvalidShader,
 
@@ -33,6 +36,9 @@ pub enum WgpuError {
     #[error("frame contains too many render views")]
     TooManyViews,
 
-    #[error("mesh contains invalid vertex or index data")]
+    #[error("mesh handle is invalid")]
     InvalidMesh,
+
+    #[error("mesh contains invalid vertex or index data")]
+    InvalidMeshData,
 }

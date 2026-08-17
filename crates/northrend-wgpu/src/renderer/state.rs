@@ -1,11 +1,13 @@
 use std::collections::HashMap;
 
+use northrend_render::{MaterialHandle, ShaderHandle};
 use wgpu::{Adapter, Device, Queue, TextureFormat};
 
 use crate::{
-    WgpuError, WgpuMaterial, WgpuShader,
+    WgpuError,
     camera::WgpuCamera,
     material::WgpuMaterialResource,
+    mesh::WgpuMesh,
     pipeline::WgpuRenderPipeline,
     shader::WgpuShaderResource,
 };
@@ -15,16 +17,17 @@ pub(super) struct WgpuRendererState {
     pub(super) device: Device,
     pub(super) queue: Queue,
     pub(super) camera: WgpuCamera,
+    pub(super) meshes: Vec<WgpuMesh>,
     pub(super) shaders: Vec<WgpuShaderResource>,
     pub(super) materials: Vec<WgpuMaterialResource>,
-    pub(super) pipelines: HashMap<(WgpuShader, TextureFormat), WgpuRenderPipeline>,
+    pub(super) pipelines: HashMap<(ShaderHandle, TextureFormat), WgpuRenderPipeline>,
 }
 
 impl WgpuRendererState {
     pub(super) fn material_shader(
         &self,
-        material: WgpuMaterial,
-    ) -> Result<WgpuShader, WgpuError> {
+        material: MaterialHandle,
+    ) -> Result<ShaderHandle, WgpuError> {
         self.materials.get(material.index())
             .map(|material| material.shader)
             .ok_or(WgpuError::InvalidMaterial)
@@ -32,7 +35,7 @@ impl WgpuRendererState {
 
     pub(super) fn ensure_pipeline(
         &mut self,
-        material: WgpuMaterial,
+        material: MaterialHandle,
         color_format: TextureFormat,
     ) -> Result<(), WgpuError> {
         let shader = self.material_shader(material)?;

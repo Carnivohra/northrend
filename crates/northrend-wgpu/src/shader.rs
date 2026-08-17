@@ -1,19 +1,6 @@
 use northrend_render::{ShaderDescriptor, ShaderSource};
 use wgpu::{Device, ShaderModule, ShaderModuleDescriptor, ShaderSource as WgpuShaderSource};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct WgpuShader(usize);
-
-impl WgpuShader {
-    pub(crate) const fn new(index: usize) -> Self {
-        Self(index)
-    }
-
-    pub(crate) const fn index(self) -> usize {
-        self.0
-    }
-}
-
 pub(crate) struct WgpuShaderResource {
     pub(crate) module: ShaderModule,
 }

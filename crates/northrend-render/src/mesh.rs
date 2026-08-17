@@ -1,6 +1,10 @@
+mod handle;
+
+pub use handle::MeshHandle;
+
 use northrend_math::Vec3;
 
-use crate::Color;
+use crate::{Color, MaterialHandle};
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -28,13 +32,13 @@ impl<'a> MeshData<'a> {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct MeshDraw<'a, M, T> {
-    pub mesh: &'a M,
-    pub material: T,
+pub struct MeshDraw {
+    pub mesh: MeshHandle,
+    pub material: MaterialHandle,
 }
 
-impl<'a, M, T> MeshDraw<'a, M, T> {
-    pub const fn new(mesh: &'a M, material: T) -> Self {
+impl MeshDraw {
+    pub const fn new(mesh: MeshHandle, material: MaterialHandle) -> Self {
         Self { mesh, material }
     }
 }
