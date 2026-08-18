@@ -2,6 +2,7 @@
 resolver = "3"
 members = [
     "crates/northrend",
+    "crates/northrend-assets",
     "crates/northrend-backend",
     "crates/northrend-game",
     "crates/northrend-math",
@@ -19,6 +20,7 @@ license = "MPL-2.0"
 
 [workspace.dependencies]
 bytemuck = "1.25.2"
+flate2 = { version = "1.1.9", default-features = false, features = ["zlib-rs"] }
 raw-window-handle = "0.6.2"
 pollster = "1.0.1"
 thiserror = "2.0.20"

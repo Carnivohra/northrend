@@ -1,0 +1,10 @@
+[package]
+name = "northrend-assets"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+flate2 = { workspace = true }
+thiserror = { workspace = true }
