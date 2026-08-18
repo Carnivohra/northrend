@@ -1,12 +1,10 @@
 # Northrend
 
-Northrend is an independent, lightweight game engine written from scratch in Rust. Its long-term technical goal is to recreate the architecture and behavior of the original World of Warcraft® game engine while remaining modular, efficient, and portable.
+Northrend is a lightweight, from-scratch reimplementation of the original World of Warcraft® game engine, written in Rust. The goal is to recreate the original engine on a portable platform that can be easily extended through independent game plugins.
 
-The engine is built directly on low-level libraries such as `winit` and `wgpu`. It does not use an existing game engine. Games integrate Northrend as a library, provide their own game implementation, select the assets they need, and start the engine from their own executable.
+Northrend is provided as a library rather than a standalone executable. Games supply their own implementation and content, then start the engine from their own executable.
 
-## Status
-
-Northrend is experimental and under active development. Its APIs, architecture, and supported formats may change substantially.
+>Northrend is experimental and under active development. Its APIs, architecture, and supported formats may change substantially.
 
 ## Goals
 
@@ -17,39 +15,26 @@ Northrend is experimental and under active development. Its APIs, architecture, 
 - A game-facing API through which individual game projects define their assets, worlds, entities, gameplay, cameras, shaders, and other content.
 - Faithful reproduction of relevant original engine behavior without using original implementation code.
 
-## Independent implementation
+## Disclaimer
 
-Northrend is an original, independently written implementation. It is not a reverse-engineering project and does not rely on decompilation, disassembly, modification, translation, or access to Blizzard's source or binary implementation.
+Northrend is independently written from scratch and does not rely on decompilation, disassembly, or access to Blizzard's implementation. It contains no Blizzard code, binaries, assets, leaked material, credentials, encryption keys, or circumvention tools.
 
-The project does not contain, incorporate, or distribute:
+File format support is provided by original parsers. Users must supply their own legally obtained game data, and contributions derived from proprietary or unlawfully obtained material are not accepted.
 
-- Blizzard source code or leaked proprietary material;
-- World of Warcraft client or server binaries;
-- original game assets, data files, artwork, models, textures, audio, music, cinematics, or text;
-- authentication credentials, encryption keys, or circumvention tools.
+Northrend is an independent, unofficial project. It is not affiliated with, authorized by, sponsored by, or endorsed by Blizzard Entertainment, Inc., Microsoft Corporation, or any of their affiliates.
 
-Support for a file format means that Northrend provides an independently written parser or loader. No Blizzard game data is bundled with this repository. Users are solely responsible for obtaining and using any external data legally and in accordance with all applicable agreements and laws.
+World of Warcraft®, Warcraft®, Blizzard Entertainment®, and related names and logos are trademarks or registered trademarks of Blizzard Entertainment, Inc. and/or their respective rights holders. References to them are made solely to describe compatibility goals and historical engine behavior; no ownership, license, endorsement, or other relationship is claimed or implied.
 
-Contributions copied or derived from leaked source code, proprietary Blizzard materials, or other unlawfully obtained material are not accepted.
-
-## Non-affiliation
-
-Northrend is an unofficial project. It is not affiliated with, authorized by, maintained by, sponsored by, or endorsed by Blizzard Entertainment, Inc., Microsoft Corporation, or any of their affiliates.
-
-The project is not intended to impersonate an official Blizzard product, connect to Blizzard services without authorization, bypass access controls or technological protection measures, facilitate cheating, or interfere with any official game or service.
-
-## Trademarks and intellectual property
-
-World of Warcraft®, Warcraft®, Blizzard Entertainment®, and all related names, logos, characters, locations, story elements, game data, and other intellectual property are owned by Blizzard Entertainment, Inc. and/or their respective rights holders. All rights in those materials are reserved by their respective owners.
-
-World of Warcraft and Warcraft are trademarks or registered trademarks of Blizzard Entertainment, Inc. in the United States and/or other countries. Blizzard Entertainment is a trademark or registered trademark of Blizzard Entertainment, Inc. in the United States and/or other countries.
-
-References to Blizzard products are made solely to describe compatibility goals and the historical engine behavior being independently reimplemented. No trademark ownership, license, sponsorship, endorsement, or other relationship is claimed or implied.
+The project is not intended to impersonate an official product, connect to Blizzard services without authorization, bypass access controls, facilitate cheating, or interfere with any official game or service.
 
 See Blizzard Entertainment's official [logo and trademark guidelines](https://www.blizzard.com/en-us/legal/8bcb0794-6641-4ce3-a573-8eb243bab342/blizzard-entertainment-logo-and-trademark-guidelines) and [legal information](https://www.blizzard.com/legal/).
 
-## Project copyright
+## License
 
-Copyright in the original Northrend source code and documentation remains with its respective contributors. Unless a separate license explicitly states otherwise, all rights are reserved and no license to Blizzard intellectual property is granted by this repository.
+Northrend is licensed under the [Mozilla Public License, Version 2.0](LICENSE).
+
+Copyright © 2026 Carnivohra and Northrend contributors.
+
+Copyright in the original Northrend source code and documentation remains with its respective contributors. This license applies only to the original Northrend project material. It does not grant any rights to Blizzard intellectual property, trademarks, game data, code, or assets.
 
 This notice is provided for clarity and is not legal advice.

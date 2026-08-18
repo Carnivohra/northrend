@@ -3,6 +3,7 @@ name = "northrend-world"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
+license.workspace = true
 
 [dependencies]
 northrend-math = { path = "../northrend-math" }
