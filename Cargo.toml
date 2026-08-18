@@ -8,6 +8,7 @@ members = [
     "crates/northrend-render",
     "crates/northrend-wgpu",
     "crates/northrend-winit",
+    "crates/northrend-world",
 ]
 
 [workspace.package]

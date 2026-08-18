@@ -22,7 +22,7 @@ impl<R: Renderer, G: Game> Engine<R, G> {
         }
     }
 
-    fn tick<C: BackendContext>(&mut self, context: &mut C) {
+    fn tick<C: BackendContext>(&mut self, context: &C) {
         let Some(target) = self.main_window.as_mut() else {
             return;
         };

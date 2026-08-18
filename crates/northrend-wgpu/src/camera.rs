@@ -90,7 +90,6 @@ impl WgpuCamera {
         let uniform_size = usize::try_from(Self::UNIFORM_SIZE)
             .map_err(|_| WgpuError::TooManyViews)?;
 
-        self.data.clear();
         self.data.resize(size, 0);
 
         for (index, columns) in matrices.enumerate() {

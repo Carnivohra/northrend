@@ -878,6 +878,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "northrend-world"
+version = "0.0.1"
+dependencies = [
+ "northrend-math",
+ "thiserror 2.0.20",
+]
+
+[[package]]
 name = "num-traits"
 version = "0.2.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"

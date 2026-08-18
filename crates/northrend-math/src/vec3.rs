@@ -51,10 +51,10 @@ impl Vec3 {
 
     #[inline]
     pub fn normalize(self) -> Self {
-        let length = self.length();
+        let length_squared = self.length_squared();
 
-        if length > 0.0 {
-            self / length
+        if length_squared > 0.0 {
+            self * length_squared.sqrt().recip()
         } else {
             Self::ZERO
         }

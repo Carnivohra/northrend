@@ -20,6 +20,7 @@ pub(super) struct WgpuRendererState {
     pub(super) meshes: Vec<WgpuMesh>,
     pub(super) shaders: Vec<WgpuShaderResource>,
     pub(super) materials: Vec<WgpuMaterialResource>,
+    pub(super) surface_formats: Vec<TextureFormat>,
     pub(super) pipelines: HashMap<(ShaderHandle, TextureFormat), WgpuRenderPipeline>,
 }
 
@@ -55,6 +56,25 @@ impl WgpuRendererState {
         );
 
         self.pipelines.insert(key, pipeline);
+        Ok(())
+    }
+
+    pub(super) fn register_surface_format(
+        &mut self,
+        color_format: TextureFormat,
+    ) -> Result<(), WgpuError> {
+        if self.surface_formats.contains(&color_format) {
+            return Ok(());
+        }
+
+        self.surface_formats.push(color_format);
+
+        for index in 0..self.materials.len() {
+            let material = MaterialHandle::from_index(index)
+                .ok_or(WgpuError::ResourceCapacityExceeded)?;
+            self.ensure_pipeline(material, color_format)?;
+        }
+
         Ok(())
     }
 }

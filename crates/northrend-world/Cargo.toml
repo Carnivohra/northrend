@@ -1,0 +1,9 @@
+[package]
+name = "northrend-world"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+[dependencies]
+northrend-math = { path = "../northrend-math" }
+thiserror = { workspace = true }

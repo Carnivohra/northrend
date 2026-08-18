@@ -73,11 +73,12 @@ impl Renderer for WgpuRenderer {
                 meshes: Vec::new(),
                 shaders: Vec::new(),
                 materials: Vec::new(),
+                surface_formats: Vec::new(),
                 pipelines: HashMap::new(),
             });
         }
 
-        let state = self.state.as_ref().expect("renderer state is initialized");
+        let state = self.state.as_mut().expect("renderer state is initialized");
 
         if !state.adapter.is_surface_supported(&surface) {
             return Err(WgpuError::UnsupportedSurface);
@@ -88,6 +89,7 @@ impl Renderer for WgpuRenderer {
             .get_default_config(&state.adapter, width.max(1), height.max(1))
             .ok_or(WgpuError::UnsupportedSurface)?;
 
+        state.register_surface_format(configuration.format)?;
         let surface = WgpuSurface::new(surface, configuration, active, &state.device);
 
         Ok(surface)
@@ -118,6 +120,11 @@ impl Renderer for WgpuRenderer {
         state.materials.push(WgpuMaterialResource {
             shader: material.shader,
         });
+
+        for index in 0..state.surface_formats.len() {
+            let color_format = state.surface_formats[index];
+            state.ensure_pipeline(handle, color_format)?;
+        }
 
         Ok(handle)
     }
@@ -157,12 +164,6 @@ impl Renderer for WgpuRenderer {
 
         let state = self.state.as_mut().ok_or(WgpuError::RendererNotInitialized)?;
         let color_format = surface.configuration.format;
-
-        for view in frame.views {
-            for draw in view.draws {
-                state.ensure_pipeline(draw.material, color_format)?;
-            }
-        }
 
         state.camera.prepare(
             &state.device,
@@ -243,7 +244,7 @@ impl Renderer for WgpuRenderer {
                         bound_shader = Some(shader);
                     }
 
-                    pipeline.draw(&mut render_pass, mesh);
+                    mesh.draw(&mut render_pass);
                 }
             }
         }

@@ -1,16 +1,16 @@
 use northrend_render::MeshData;
 use wgpu::{
-    Buffer, BufferAddress, Device, VertexAttribute, VertexBufferLayout, VertexFormat,
-    VertexStepMode,
+    Buffer, BufferAddress, Device, IndexFormat, RenderPass, VertexAttribute,
+    VertexBufferLayout, VertexFormat, VertexStepMode,
     util::{BufferInitDescriptor, DeviceExt},
 };
 
 use crate::WgpuError;
 
 pub(crate) struct WgpuMesh {
-    pub(crate) vertex_buffer: Buffer,
-    pub(crate) index_buffer: Buffer,
-    pub(crate) index_count: u32,
+    vertex_buffer: Buffer,
+    index_buffer: Buffer,
+    index_count: u32,
 }
 
 impl WgpuMesh {
@@ -77,5 +77,11 @@ impl WgpuMesh {
             step_mode: VertexStepMode::Vertex,
             attributes: &Self::ATTRIBUTES,
         }
+    }
+
+    pub(crate) fn draw(&self, render_pass: &mut RenderPass<'_>) {
+        render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
+        render_pass.set_index_buffer(self.index_buffer.slice(..), IndexFormat::Uint32);
+        render_pass.draw_indexed(0..self.index_count, 0, 0..1);
     }
 }

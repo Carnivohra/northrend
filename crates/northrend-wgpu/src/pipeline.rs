@@ -1,6 +1,6 @@
 use wgpu::{
     BindGroup, BindGroupLayout, BlendState, ColorTargetState, ColorWrites, CompareFunction,
-    DepthStencilState, Device, Face, FragmentState, IndexFormat, PipelineLayoutDescriptor,
+    DepthStencilState, Device, Face, FragmentState, PipelineLayoutDescriptor,
     PrimitiveState, RenderPass, RenderPipeline, RenderPipelineDescriptor, ShaderModule,
     StencilState, TextureFormat, VertexState,
 };
@@ -72,11 +72,5 @@ impl WgpuRenderPipeline {
     ) {
         render_pass.set_pipeline(&self.pipeline);
         render_pass.set_bind_group(0, camera, &[camera_offset]);
-    }
-
-    pub(crate) fn draw(&self, render_pass: &mut RenderPass<'_>, mesh: &WgpuMesh) {
-        render_pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
-        render_pass.set_index_buffer(mesh.index_buffer.slice(..), IndexFormat::Uint32);
-        render_pass.draw_indexed(0..mesh.index_count, 0, 0..1);
     }
 }
