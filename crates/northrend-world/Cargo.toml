@@ -6,5 +6,6 @@ authors.workspace = true
 license.workspace = true
 
 [dependencies]
+northrend-assets = { path = "../northrend-assets" }
 northrend-math = { path = "../northrend-math" }
 thiserror = { workspace = true }

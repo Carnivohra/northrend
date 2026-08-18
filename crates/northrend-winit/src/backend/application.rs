@@ -1,14 +1,18 @@
 use std::sync::Arc;
 
 use northrend_backend::{
-    BackendApplication, WindowId,
+    BackendApplication, DeviceEvent, WindowId,
     window::{WindowEvent, event::WindowEventKind},
 };
 use winit::{
     application::ApplicationHandler,
+    event::{ElementState, MouseScrollDelta},
     event_loop::ActiveEventLoop,
+    keyboard::PhysicalKey,
     window::{Window, WindowId as WinitWindowId},
 };
+
+use crate::input::{key_code, mouse_button};
 
 use super::context::WinitBackendContext;
 
@@ -45,6 +49,24 @@ impl<A: BackendApplication> ApplicationHandler for WinitApplication<A> {
         self.application.suspended(&mut context);
     }
 
+    fn device_event(
+        &mut self,
+        event_loop: &ActiveEventLoop,
+        _device_id: winit::event::DeviceId,
+        event: winit::event::DeviceEvent,
+    ) {
+        let winit::event::DeviceEvent::MouseMotion { delta } = event else {
+            return;
+        };
+        let mut context = WinitBackendContext::new(event_loop, &mut self.windows);
+        let event = DeviceEvent::MouseMotion {
+            horizontal: delta.0,
+            vertical: delta.1,
+        };
+
+        self.application.device_event(&mut context, event);
+    }
+
     fn window_event(
         &mut self,
         event_loop: &ActiveEventLoop,
@@ -58,6 +80,47 @@ impl<A: BackendApplication> ApplicationHandler for WinitApplication<A> {
                 height: size.height,
             },
             winit::event::WindowEvent::RedrawRequested => WindowEventKind::RedrawRequested,
+            winit::event::WindowEvent::Focused(focused) => WindowEventKind::Focused(focused),
+            winit::event::WindowEvent::KeyboardInput { event, .. } => {
+                let PhysicalKey::Code(code) = event.physical_key else {
+                    return;
+                };
+                let Some(key) = key_code(code) else {
+                    return;
+                };
+
+                WindowEventKind::KeyboardInput {
+                    key,
+                    pressed: event.state == ElementState::Pressed,
+                    repeat: event.repeat,
+                }
+            }
+            winit::event::WindowEvent::MouseInput { state, button, .. } => {
+                WindowEventKind::MouseInput {
+                    button: mouse_button(button),
+                    pressed: state == ElementState::Pressed,
+                }
+            }
+            winit::event::WindowEvent::CursorMoved { position, .. } => {
+                WindowEventKind::CursorMoved {
+                    x: position.x,
+                    y: position.y,
+                }
+            }
+            winit::event::WindowEvent::CursorEntered { .. } => WindowEventKind::CursorEntered,
+            winit::event::WindowEvent::CursorLeft { .. } => WindowEventKind::CursorLeft,
+            winit::event::WindowEvent::MouseWheel { delta, .. } => match delta {
+                MouseScrollDelta::LineDelta(horizontal, vertical) => {
+                    WindowEventKind::MouseWheelLines {
+                        horizontal,
+                        vertical,
+                    }
+                }
+                MouseScrollDelta::PixelDelta(delta) => WindowEventKind::MouseWheelPixels {
+                    horizontal: delta.x,
+                    vertical: delta.y,
+                },
+            },
             _ => return,
         };
 

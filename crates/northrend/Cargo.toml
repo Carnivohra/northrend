@@ -5,8 +5,11 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+northrend-assets = { path = "../northrend-assets" }
 northrend-backend = { path = "../northrend-backend" }
 northrend-game = { path = "../northrend-game" }
+northrend-input = { path = "../northrend-input" }
 northrend-render = { path = "../northrend-render" }
+northrend-world = { path = "../northrend-world" }
 
 pollster = { workspace = true }

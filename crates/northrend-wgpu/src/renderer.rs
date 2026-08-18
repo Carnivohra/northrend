@@ -85,9 +85,12 @@ impl Renderer for WgpuRenderer {
         }
 
         let active = width > 0 && height > 0;
-        let configuration = surface
+        let mut configuration = surface
             .get_default_config(&state.adapter, width.max(1), height.max(1))
             .ok_or(WgpuError::UnsupportedSurface)?;
+
+        configuration.present_mode = wgpu::PresentMode::AutoNoVsync;
+        configuration.desired_maximum_frame_latency = 3;
 
         state.register_surface_format(configuration.format)?;
         let surface = WgpuSurface::new(surface, configuration, active, &state.device);

@@ -5,6 +5,7 @@ members = [
     "crates/northrend-assets",
     "crates/northrend-backend",
     "crates/northrend-game",
+    "crates/northrend-input",
     "crates/northrend-math",
     "crates/northrend-render",
     "crates/northrend-wgpu",

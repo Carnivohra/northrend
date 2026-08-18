@@ -1,10 +1,8 @@
 [package]
-name = "northrend-game"
+name = "northrend-input"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
 
 [dependencies]
-northrend-input = { path = "../northrend-input" }
-northrend-render = { path = "../northrend-render" }

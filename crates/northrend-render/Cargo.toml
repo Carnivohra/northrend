@@ -8,3 +8,4 @@ license.workspace = true
 [dependencies]
 northrend-backend = { path = "../northrend-backend" }
 northrend-math = { path = "../northrend-math" }
+northrend-world = { path = "../northrend-world" }

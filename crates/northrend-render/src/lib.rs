@@ -4,7 +4,9 @@ mod frame;
 mod material;
 mod mesh;
 mod renderer;
+mod scene;
 mod shader;
+mod terrain;
 mod view;
 
 pub use camera::Camera;
@@ -13,5 +15,6 @@ pub use frame::RenderFrame;
 pub use material::{MaterialDescriptor, MaterialHandle};
 pub use mesh::{MeshData, MeshDraw, MeshHandle, Vertex};
 pub use renderer::Renderer;
+pub use scene::RenderScene;
 pub use shader::{ShaderDescriptor, ShaderHandle, ShaderSource};
 pub use view::RenderView;

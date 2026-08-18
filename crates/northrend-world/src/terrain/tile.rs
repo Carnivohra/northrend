@@ -1,12 +1,14 @@
 mod builder;
 mod coordinate;
 mod error;
+mod loader;
 
 pub use builder::TerrainTileBuilder;
 pub use coordinate::TerrainTileCoordinate;
 pub use error::TerrainTileError;
 
 use super::{TerrainChunk, TerrainVertex};
+use northrend_assets::Adt;
 
 #[derive(Debug)]
 pub struct TerrainTile {
@@ -16,6 +18,10 @@ pub struct TerrainTile {
 }
 
 impl TerrainTile {
+    pub fn from_adt(adt: &Adt) -> Result<Self, TerrainTileError> {
+        loader::load(adt)
+    }
+
     pub(super) fn new(
         chunks: Vec<TerrainChunk>,
         vertices: Vec<TerrainVertex>,
